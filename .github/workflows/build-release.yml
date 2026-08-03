@@ -1,0 +1,49 @@
+name: Build & Publish Release Package
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore sara_coursework.sln
+
+      - name: Publish application
+        run: dotnet publish sara_coursework.csproj -c Release -r win-x64 --self-contained false -o ./publish
+
+      - name: Create Release ZIP Archive
+        run: Compress-Archive -Path ./publish/* -DestinationPath ./sara_coursework-release.zip
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sara_coursework-build-archive
+          path: ./sara_coursework-release.zip
+          retention-days: 14
+
+      - name: Create GitHub Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./sara_coursework-release.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

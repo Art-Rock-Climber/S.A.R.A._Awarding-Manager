@@ -1,0 +1,499 @@
+<Window x:Class="sara_coursework.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:sara_coursework"
+        mc:Ignorable="d"
+        Title="{Binding WindowTitle}" Height="600" Width="900" PreviewKeyDown="Window_PreviewKeyDown">
+    <Window.Resources>
+        <Style x:Key="AdminButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#FFDDDDDD"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="BorderBrush" Value="#FF707070"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,2"/>
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+        <Style x:Key="AdminTabItemStyle" TargetType="TabItem">
+        </Style>
+        <Style x:Key="SearchTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Height" Value="25"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Width" Value="200"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="2"/>
+                            <Grid Margin="5,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ScrollViewer x:Name="PART_ContentHost" Grid.Column="0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="watermark" Text="{TemplateBinding Tag}" Grid.Column="0"
+                                           Foreground="Gray" IsHitTestVisible="False" VerticalAlignment="Center" Visibility="Collapsed"/>
+                                <Button x:Name="btnClear" Content="×" Grid.Column="1"
+                                        Width="24" Height="24" Margin="2,0,0,0"
+                                        Background="Transparent" BorderThickness="0"
+                                        Foreground="Gray" FontWeight="Bold" FontSize="14"
+                                        VerticalAlignment="Center" Cursor="Hand"
+                                        Click="ClearSearchButton_Click" Focusable="False">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Foreground" Value="Red"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Text" Value="">
+                                <Setter TargetName="watermark" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="btnClear" Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                            <Trigger Property="Text" Value="{x:Null}">
+                                <Setter TargetName="watermark" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="btnClear" Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <local:LogLevelToColorConverter x:Key="LogLevelToColorConverter"/>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Menu Grid.Row="0">
+            <MenuItem Header="Настройки">
+                <MenuItem Header="Вход" Command="{Binding LoginCommand}"/>
+                <MenuItem Header="Регистрация" Command="{Binding RegisterCommand}"/>
+            </MenuItem>
+            <MenuItem Header="Помощь" Command="{Binding OpenHelpCommand}"/>
+        </Menu>
+        <TabControl Margin="5" x:Name="tabControl" Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}">
+
+            <!-- Вкладка награждений -->
+            <TabItem Header="💻 Награждения">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="55*"/>
+                        <ColumnDefinition Width="829*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Панель фильтров -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5,5,5,5" Grid.ColumnSpan="2">
+
+                        <!-- Кнопка для открытия меню -->
+                        <ToggleButton x:Name="btnSelectAwards" Margin="0,0,5,0"
+                            Width="110" Height="25"
+                            IsChecked="{Binding IsOpen, ElementName=awardsPopup, Mode=TwoWay}" >
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Выбор наград" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70D;" FontSize="8" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ToggleButton>
+
+                        <!-- Выпадающее меню -->
+                        <Popup x:Name="awardsPopup" PlacementTarget="{Binding ElementName=btnSelectAwards}"
+                            IsOpen="False"
+                            StaysOpen="{Binding IsMouseOver, ElementName=btnSelectAwards}">
+                            <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                                <ListBox x:Name="lbAwards" ItemsSource="{Binding AwardingsTab.AwardFilterItems}"
+                                    MaxHeight="200" BorderThickness="0">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <CheckBox Content="{Binding AwardName}" IsChecked="{Binding IsSelected, Mode=TwoWay}" Margin="2" />
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Border>
+                        </Popup>
+                        <DatePicker x:Name="dpStartDate" Width="100" Margin="5"
+                            SelectedDate="{Binding AwardingsTab.StartDate, Mode=TwoWay}"/>
+                        <DatePicker x:Name="dpEndDate" Width="100" Margin="5"
+                            SelectedDate="{Binding AwardingsTab.EndDate, Mode=TwoWay}"/>
+                        <TextBox x:Name="searchNameBox" Text="{Binding AwardingsTab.SearchName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SearchTextBoxStyle}" Tag="ФИО/Коллектив..." Width="110"/>
+                        <TextBox x:Name="searchPositionBox" Text="{Binding AwardingsTab.SearchPosition, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SearchTextBoxStyle}" Tag="Должность..." Width="80"/>
+                        <TextBox x:Name="searchDecreeBox" Text="{Binding AwardingsTab.SearchDecree, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SearchTextBoxStyle}" Tag="№ приказа..." Width="80"/>
+                        <Button x:Name="FilterButton" Content="Фильтровать" Height="25" Margin="5" Padding="10,2" Command="{Binding AwardingsTab.FilterCommand}"/>
+                        <Button x:Name="ResetButton" Content="Сбросить" Height="25" Margin="5" Padding="10,2" Command="{Binding AwardingsTab.ResetCommand}"/>
+                    </StackPanel>
+
+                    <!-- Таблица данных -->
+                    <DataGrid x:Name="dgAwardings" Grid.Row="1" Margin="5,5,5,5" AutoGenerateColumns="False"
+                            CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single"
+                            ItemsSource="{Binding AwardingsTab.Awardings}" SelectedItem="{Binding AwardingsTab.SelectedAwarding}" ClipToBounds="True" Grid.ColumnSpan="2">
+                        <DataGrid.InputBindings>
+                            <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding EditCommand}"/>
+                        </DataGrid.InputBindings>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ФИО/коллектив" Width="160" Binding="{Binding AwardedName}"/>
+                            <DataGridTextColumn Header="Тип" Width="80" Binding="{Binding AwardedType}"/>
+                            <DataGridTextColumn Header="Должность" Width="80" Binding="{Binding Position}"/>
+                            <DataGridTextColumn Header="Награда" Width="100" Binding="{Binding AwardTitle}"/>
+                            <DataGridTextColumn Header="Основание" Width="180" Binding="{Binding Reason}"/>
+                            <DataGridTextColumn Header="Номер приказа" Width="120" Binding="{Binding DecreeNumber}"/>
+                            <DataGridTextColumn Header="Дата" Width="80" Binding="{Binding DecreeDate, StringFormat=d}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid Grid.Row="2" Margin="5,5,5,5" Grid.ColumnSpan="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding AwardingsTab.TotalItems, StringFormat='Всего записей: {0}'}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                            <TextBlock Text="{Binding AwardingsTab.CurrentPage, StringFormat='Страница {0}'}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding AwardingsTab.TotalPages, StringFormat=' из {0}'}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Назад" Width="75" Height="25" Margin="2" Command="{Binding AwardingsTab.PreviousPageCommand}"/>
+                            <Button Content="Вперед" Width="75" Height="25" Margin="2" Command="{Binding AwardingsTab.NextPageCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- Вертикальный разделитель -->
+            <TabItem IsEnabled="False" Focusable="False">
+                <TabItem.Template>
+                    <ControlTemplate TargetType="TabItem">
+                        <!-- Рисуем тонкую серую линию высотой 16px с отступами по бокам -->
+                        <Border Width="1" Height="16" Background="LightGray" VerticalAlignment="Center" Margin="6,0" />
+                    </ControlTemplate>
+                </TabItem.Template>
+            </TabItem>
+
+            <!-- Вкладка награждаемых -->
+            <TabItem Header="📖 Награждаемые">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBox Grid.Row="0" Text="{Binding AwardedTab.SearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SearchTextBoxStyle}" Tag="Поиск..."/>
+
+                    <!-- Таблица -->
+                    <DataGrid x:Name="dgAwarded" Grid.Row="1" AutoGenerateColumns="False" Margin="5"
+                               CanUserAddRows="False" IsReadOnly="True"
+                               ItemsSource="{Binding AwardedTab.AwardedList}" SelectedItem="{Binding AwardedTab.SelectedAwarded}">
+                        <DataGrid.InputBindings>
+                            <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding EditCommand}"/>
+                        </DataGrid.InputBindings>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Тип" Binding="{Binding AwardedType}" Width="100"/>
+                            <DataGridTextColumn Header="ФИО/Название" Binding="{Binding DisplayName}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid Grid.Row="2" Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding AwardedTab.TotalItems, StringFormat='Всего записей: {0}'}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                            <TextBlock Text="{Binding AwardedTab.CurrentPage, StringFormat='Страница {0}'}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding AwardedTab.TotalPages, StringFormat=' из {0}'}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Назад" Width="75" Height="25" Margin="2" Command="{Binding AwardedTab.PreviousPageCommand}"/>
+                            <Button Content="Вперед" Width="75" Height="25" Margin="2" Command="{Binding AwardedTab.NextPageCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- Вкладка постановлений -->
+            <TabItem Header="📖 Постановления">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBox Grid.Row="0" Text="{Binding DecreesTab.SearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SearchTextBoxStyle}" Tag="Поиск..."/>
+                    <DataGrid x:Name="dgDecrees" Grid.Row="1" AutoGenerateColumns="False" Margin="5"
+                             CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single"
+                             ItemsSource="{Binding DecreesTab.Decrees}" SelectedItem="{Binding DecreesTab.SelectedDecree}">
+                        <DataGrid.InputBindings>
+                            <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding EditCommand}"/>
+                        </DataGrid.InputBindings>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Номер" Binding="{Binding Number}" Width="100"/>
+                            <DataGridTextColumn Header="Дата" Binding="{Binding Date, StringFormat=dd.MM.yyyy}" Width="100"/>
+                            <DataGridTextColumn Header="Основание" Binding="{Binding AwardReason.ReasonName}" Width="*"/>
+                            <DataGridTextColumn Header="Кол-во награждений" Binding="{Binding AwardAssignments.Count}" Width="140"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Grid.Row="2" Margin="5" HorizontalAlignment="Left"
+                        Text="{Binding Items.Count, ElementName=dgDecrees, StringFormat='Всего записей: {0}'}"/>
+                </Grid>
+            </TabItem>
+
+            <!-- Вкладка наград -->
+            <TabItem Header="📖 Награды">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBox Grid.Row="0" Text="{Binding AwardsTab.SearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SearchTextBoxStyle}" Tag="Поиск..."/>
+                    <DataGrid x:Name="dgAwardsList" Grid.Row="1" AutoGenerateColumns="False" Margin="5"
+                               CanUserAddRows="False" IsReadOnly="True"
+                               ItemsSource="{Binding AwardsTab.Awards}" SelectedItem="{Binding AwardsTab.SelectedAward}">
+                        <DataGrid.InputBindings>
+                            <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding EditCommand}"/>
+                        </DataGrid.InputBindings>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Награда" Binding="{Binding AwardName}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid Grid.Row="2" Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding AwardsTab.TotalItems, StringFormat='Всего записей: {0}'}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                            <TextBlock Text="{Binding AwardsTab.CurrentPage, StringFormat='Страница {0}'}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding AwardsTab.TotalPages, StringFormat=' из {0}'}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Назад" Width="75" Height="25" Margin="2" Command="{Binding AwardsTab.PreviousPageCommand}"/>
+                            <Button Content="Вперед" Width="75" Height="25" Margin="2" Command="{Binding AwardsTab.NextPageCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- Вкладка оснований -->
+            <TabItem Header="📖 Основания">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBox Grid.Row="0" Text="{Binding ReasonsTab.SearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SearchTextBoxStyle}" Tag="Поиск..."/>
+                    <DataGrid x:Name="dgReasons" Grid.Row="1" AutoGenerateColumns="False" Margin="5"
+                               CanUserAddRows="False" IsReadOnly="True"
+                               ItemsSource="{Binding ReasonsTab.Reasons}" SelectedItem="{Binding ReasonsTab.SelectedReason}">
+                        <DataGrid.InputBindings>
+                            <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding EditCommand}"/>
+                        </DataGrid.InputBindings>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Основание" Binding="{Binding ReasonName}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid Grid.Row="2" Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding ReasonsTab.TotalItems, StringFormat='Всего записей: {0}'}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                            <TextBlock Text="{Binding ReasonsTab.CurrentPage, StringFormat='Страница {0}'}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding ReasonsTab.TotalPages, StringFormat=' из {0}'}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Назад" Width="75" Height="25" Margin="2" Command="{Binding ReasonsTab.PreviousPageCommand}"/>
+                            <Button Content="Вперед" Width="75" Height="25" Margin="2" Command="{Binding ReasonsTab.NextPageCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- Вертикальный разделитель -->
+            <TabItem IsEnabled="False" Focusable="False">
+                <TabItem.Template>
+                    <ControlTemplate TargetType="TabItem">
+                        <!-- Рисуем тонкую серую линию высотой 16px с отступами по бокам -->
+                        <Border Width="1" Height="16" Background="LightGray" VerticalAlignment="Center" Margin="4,0" />
+                    </ControlTemplate>
+                </TabItem.Template>
+            </TabItem>
+
+            <!-- Вкладка пользователей -->
+            <TabItem Header="🔒 Пользователи" Style="{StaticResource AdminTabItemStyle}" x:Name="tabUsers" IsEnabled="{Binding IsAdmin}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBox Grid.Row="0" Text="{Binding UsersTab.SearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SearchTextBoxStyle}" Tag="Поиск..."/>
+                    <DataGrid x:Name="dgUsers" Grid.Row="1" AutoGenerateColumns="False" Margin="5"
+                                CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single"
+                                ItemsSource="{Binding UsersTab.Users}" SelectedItem="{Binding UsersTab.SelectedUser}">
+                        <DataGrid.InputBindings>
+                            <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding EditCommand}"/>
+                        </DataGrid.InputBindings>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Пользователь" Binding="{Binding UserName}" Width="100"/>
+                            <DataGridTextColumn Header="Роль" Binding="{Binding Role}" Width="100"/>
+                            <DataGridTextColumn Header="Дата создания" Binding="{Binding CreatedAt, StringFormat=dd.MM.yyyy}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid Grid.Row="2" Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding UsersTab.TotalItems, StringFormat='Всего записей: {0}'}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                            <TextBlock Text="{Binding UsersTab.CurrentPage, StringFormat='Страница {0}'}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding UsersTab.TotalPages, StringFormat=' из {0}'}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Назад" Width="75" Height="25" Margin="2" Command="{Binding UsersTab.PreviousPageCommand}"/>
+                            <Button Content="Вперед" Width="75" Height="25" Margin="2" Command="{Binding UsersTab.NextPageCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- Вкладка журналирования -->
+            <TabItem Header="🔒 Журнал" Style="{StaticResource AdminTabItemStyle}" x:Name="tabLogs" IsEnabled="{Binding IsAdmin}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Панель фильтров -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5">
+                        <DatePicker x:Name="dpLogStartDate" Width="120" Margin="5" SelectedDateFormat="Short" SelectedDate="{Binding LogsTab.LogStartDate}"/>
+                        <DatePicker x:Name="dpLogEndDate" Width="120" Margin="5" SelectedDateFormat="Short" SelectedDate="{Binding LogsTab.LogEndDate}"/>
+                        <ComboBox x:Name="cbLogLevel" Width="120" Margin="5" SelectedValue="{Binding LogsTab.SelectedLogLevel}" SelectedValuePath="Content">
+                            <ComboBoxItem>Все уровни</ComboBoxItem>
+                            <ComboBoxItem>Info</ComboBoxItem>
+                            <ComboBoxItem>Warning</ComboBoxItem>
+                            <ComboBoxItem>Error</ComboBoxItem>
+                        </ComboBox>
+                        <TextBox Text="{Binding LogsTab.SearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SearchTextBoxStyle}" Tag="Поиск..." Width="150" Height="25" Margin="5" />
+                        <Button Content="Применить" Margin="5" Padding="10,2" Command="{Binding LogsTab.ApplyLogFiltersCommand}"/>
+                        <Button Content="Сбросить" Margin="5" Padding="10,2" Command="{Binding LogsTab.ResetLogFiltersCommand}"/>
+                        <Button Command="{Binding LogsTab.ClearLogsCommand}" Margin="5" Padding="10,2" Background="#FFFDF2F2" BorderBrush="#FFFECDCA">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74D;" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#FFD92D20"/>
+                                <TextBlock Text="Очистить логи" VerticalAlignment="Center" Foreground="#FFD92D20" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Таблица логов -->
+                    <DataGrid x:Name="dgLogs" Grid.Row="1" AutoGenerateColumns="False" Margin="5"
+                        CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single"
+                        ItemsSource="{Binding LogsTab.Logs}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Дата/время" Binding="{Binding Timestamp, StringFormat=dd.MM.yyyy HH:mm:ss}" Width="150"/>
+                            <DataGridTextColumn Header="Уровень" Binding="{Binding Level}" Width="70">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground">
+                                            <Setter.Value>
+                                                <MultiBinding Converter="{StaticResource LogLevelToColorConverter}">
+                                                    <Binding/>
+                                                    <Binding Path="Level"/>
+                                                </MultiBinding>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Пользователь" Binding="{Binding UserName}" Width="110"/>
+                            <DataGridTextColumn Header="Действие" Binding="{Binding Action}" Width="160"/>
+                            <DataGridTextColumn Header="Сообщение" Binding="{Binding Message}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid Grid.Row="2" Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding LogsTab.TotalItems, StringFormat='Всего записей: {0}'}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                            <TextBlock Text="{Binding LogsTab.CurrentPage, StringFormat='Страница {0}'}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding LogsTab.TotalPages, StringFormat=' из {0}'}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Назад" Width="75" Height="25" Margin="2" Command="{Binding LogsTab.PreviousPageCommand}"/>
+                            <Button Content="Вперед" Width="75" Height="25" Margin="2" Command="{Binding LogsTab.NextPageCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <!-- Панель управления -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
+            <Button Command="{Binding AddCommand}" x:Name="btnAdd" IsEnabled="{Binding CanCRUD}"
+                    Background="#FFE8F5E9" BorderBrush="#FFA5D6A7" Height="30">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE710;" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#FF2E7D32"/>
+                    <TextBlock Text="Добавить" VerticalAlignment="Center" Foreground="#FF2E7D32" FontWeight="SemiBold"/>
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding EditCommand}" x:Name="btnEdit" IsEnabled="{Binding CanCRUD}"
+                    Background="#FFFDF9E2" BorderBrush="#FFE0B034" Height="30">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70F;" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#FFB78103"/>
+                    <TextBlock Text="Редактировать" VerticalAlignment="Center" Foreground="#FFB78103" FontWeight="SemiBold"/>
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding DeleteCommand}" x:Name="btnDelete" IsEnabled="{Binding CanCRUD}"
+                    Background="#FFFDF2F2" BorderBrush="#FFFECDCA" Height="30">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74D;" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#FFD92D20"/>
+                    <TextBlock Text="Удалить" VerticalAlignment="Center" Foreground="#FFD92D20" FontWeight="SemiBold"/>
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding ImportFromExcelCommand}" x:Name="btnImport" IsEnabled="{Binding IsAdmin}"
+                    Style="{StaticResource AdminButtonStyle}" Height="30">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8B5;" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock Text="Импорт" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding ExportToZipCommand}" Height="30" Margin="5" IsEnabled="{Binding CanExport}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xEDE1;" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock Text="Экспорт" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>

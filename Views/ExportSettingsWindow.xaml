@@ -1,0 +1,91 @@
+<Window x:Class="sara_coursework.Views.ExportSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:sara_coursework"
+        mc:Ignorable="d"
+        Title="Настройки экспорта" Height="520" Width="420" WindowStartupLocation="CenterOwner">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Формат экспорта -->
+        <GroupBox Grid.Row="0" Header="Формат экспорта">
+            <StackPanel Orientation="Horizontal">
+                <CheckBox x:Name="chkWord" Content="Word" IsChecked="True" Margin="5"/>
+                <CheckBox x:Name="chkExcel" Content="Excel" IsChecked="True" Margin="5"
+                          Checked="ExcelCheckBox_Changed" Unchecked="ExcelCheckBox_Changed"/>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Настройки Word -->
+        <GroupBox Grid.Row="1" Header="Настройки реестра награждений Word" Margin="0,10,0,0">
+            <StackPanel>
+                <CheckBox x:Name="chkWordFiltered" Content="Экспортировать только отфильтрованные данные" 
+                  Margin="0,5,0,0" IsChecked="True"/>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Настройки Excel -->
+        <GroupBox Grid.Row="2" Header="Настройки Excel" Margin="0,10,0,0">
+            <StackPanel>
+                <ListBox x:Name="lbExcelSheets" SelectionMode="Multiple"
+                         IsEnabled="{Binding IsChecked, ElementName=chkExcel}">
+                    <ListBoxItem IsSelected="True">Награждения</ListBoxItem>
+                    <ListBoxItem IsSelected="True">Награждаемые</ListBoxItem>
+                    <ListBoxItem IsSelected="True">Постановления</ListBoxItem>
+                    <ListBoxItem IsSelected="True">Награды</ListBoxItem>
+                    <ListBoxItem IsSelected="True">Основания</ListBoxItem>
+                </ListBox>
+                <CheckBox x:Name="chkExcelStats" Content="Статистика о награждённых по периодам и организациям" 
+                    Margin="0,5,0,0" IsChecked="True"/>
+                <TextBlock x:Name="txtExcelWarning" Foreground="Red" Visibility="Collapsed"
+                   Text="Выберите хотя бы один лист!" Margin="0,5,0,0"/>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Защита архива паролем -->
+        <GroupBox Grid.Row="3" Header="Защита архива" Margin="0,10,0,0">
+            <StackPanel>
+                <CheckBox x:Name="chkEnablePassword" Content="Установить пароль на ZIP-архив" Margin="0,5,0,5"/>
+                <StackPanel IsEnabled="{Binding IsChecked, ElementName=chkEnablePassword}" Margin="10,0,0,0">
+                    <Grid Margin="0,2,0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Пароль:" Padding="0" VerticalAlignment="Center"/>
+                        <PasswordBox x:Name="txtZipPassword" Grid.Column="1" Height="24" VerticalContentAlignment="Center"/>
+                    </Grid>
+                    <Grid Margin="0,2,0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Подтверждение:" Padding="0" VerticalAlignment="Center"/>
+                        <PasswordBox x:Name="txtZipPasswordConfirm" Grid.Column="1" Height="24" VerticalContentAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Прогресс -->
+        <StackPanel Grid.Row="4" Orientation="Vertical" VerticalAlignment="Bottom" Margin="0,10,0,0">
+            <ProgressBar x:Name="progressBar" Height="18"/>
+            <TextBlock x:Name="txtProgress" TextAlignment="Center" Margin="0,2,0,0" FontSize="11"/>
+        </StackPanel>
+
+        <!-- Кнопки -->
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Экспорт" Click="ExportButton_Click" IsDefault="True"/>
+            <Button Content="Отмена" Click="CancelButton_Click" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,47 @@
+<Window x:Class="sara_coursework.Views.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:sara_coursework.Views"
+        mc:Ignorable="d"
+        Title="Авторизация" Height="200" Width="300"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Основное содержимое -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="Логин:" Margin="0,0,0,5"/>
+            <TextBox x:Name="txtUsername" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Пароль:" Margin="0,0,0,5"/>
+            <PasswordBox x:Name="txtPassword" Margin="0,0,0,20"/>
+        </StackPanel>
+
+        <!-- Нижняя панель с кнопками -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Кнопка регистрации слева -->
+            <Button Content="Регистрация" 
+                Click="RegisterButton_Click"
+                HorizontalAlignment="Left"
+                Grid.Column="0"/>
+
+            <!-- Кнопки входа и отмены справа -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1">
+                <Button Content="Войти" Click="LoginButton_Click" 
+                    IsDefault="True"/>
+                <Button Content="Отмена" Click="CancelButton_Click" 
+                    IsCancel="True"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
