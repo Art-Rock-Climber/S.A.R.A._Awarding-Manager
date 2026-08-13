@@ -152,10 +152,12 @@ namespace sara_coursework.ViewModels.Tabs
                 {
                     if (a is Citizen citizen)
                     {
+                        string collName = citizen.Collective?.CollectiveName ?? string.Empty;
                         return (citizen.LastName != null && citizen.LastName.ToLower().Contains(query)) ||
                                (citizen.FirstName != null && citizen.FirstName.ToLower().Contains(query)) ||
                                (citizen.MiddleName != null && citizen.MiddleName.ToLower().Contains(query)) ||
-                               (citizen.Position != null && citizen.Position.ToLower().Contains(query));
+                               (citizen.Position != null && citizen.Position.ToLower().Contains(query)) ||
+                               (!string.IsNullOrEmpty(collName) && collName.ToLower().Contains(query));
                     }
                     else if (a is Collective collective)
                     {
@@ -180,12 +182,28 @@ namespace sara_coursework.ViewModels.Tabs
             AwardedList.Clear();
             foreach (var a in paged)
             {
-                AwardedList.Add(new AwardedViewModel
+                if (a is Citizen citizen)
                 {
-                    Id = a.Id,
-                    AwardedType = a is Citizen ? "Гражданин" : "Коллектив",
-                    DisplayName = a is Citizen citizen ? citizen.ToString() : ((Collective)a).CollectiveName
-                });
+                    AwardedList.Add(new AwardedViewModel
+                    {
+                        Id = citizen.Id,
+                        AwardedType = "Гражданин",
+                        DisplayName = citizen.ToString(),
+                        Position = string.IsNullOrWhiteSpace(citizen.Position) ? "—" : citizen.Position,
+                        CollectiveName = citizen.Collective != null ? citizen.Collective.CollectiveName : "—"
+                    });
+                }
+                else if (a is Collective collective)
+                {
+                    AwardedList.Add(new AwardedViewModel
+                    {
+                        Id = collective.Id,
+                        AwardedType = "Коллектив",
+                        DisplayName = collective.CollectiveName,
+                        Position = "—",
+                        CollectiveName = collective.CollectiveName
+                    });
+                }
             }
         }
 
@@ -207,13 +225,14 @@ namespace sara_coursework.ViewModels.Tabs
         {
             if (SelectedAwarded != null)
             {
-                var editAwardedWindow = new EditAwardedWindow(_awardedRepo, _assignmentRepo, SelectedAwarded.Id);
+                int editedId = SelectedAwarded.Id;
+                var editAwardedWindow = new EditAwardedWindow(_awardedRepo, _assignmentRepo, editedId);
                 if (editAwardedWindow.ShowDialog() == true)
                 {
-                    LoadData();
                     _logRepo.LogAction("Info", "EditAwarded",
-                        $"Пользователь {_getCurrentUser()?.Username ?? "System"} изменил награждаемого (ID: {SelectedAwarded.Id}).",
+                        $"Пользователь {_getCurrentUser()?.Username ?? "System"} изменил награждаемого (ID: {editedId}).",
                         _getCurrentUser()?.Username ?? "System");
+                    LoadData();
                     _reloadLogs();
                     _reloadAwardings();
                 }

@@ -18,6 +18,8 @@ namespace sara_coursework.Views
         private readonly Awarded? _editingAwarded;
         private List<Citizen> _citizens = new();
         private List<Collective> _collectives = new();
+        private HashSet<int> _selectedMemberIds = new();
+        private bool _isUpdatingSelection = false;
 
         public EditAwardedWindow(
             IAwardedRepository awardedRepo,
@@ -54,6 +56,7 @@ namespace sara_coursework.Views
 
             cmbCollective.ItemsSource = _collectives;
             lstMembers.ItemsSource = _citizens;
+            lstMembers.SelectionChanged += LstMembers_SelectionChanged;
 
             LoadData();
 
@@ -80,15 +83,65 @@ namespace sara_coursework.Views
                 cmbType.SelectedIndex = 1;
                 txtCollectiveName.Text = collective.CollectiveName;
 
-                foreach (var member in collective.Members)
+                _selectedMemberIds = new HashSet<int>(collective.Members.Select(m => m.Id));
+                ApplyMembersFilter();
+            }
+        }
+
+        private void LstMembers_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isUpdatingSelection) return;
+
+            foreach (Citizen added in e.AddedItems)
+            {
+                _selectedMemberIds.Add(added.Id);
+            }
+            foreach (Citizen removed in e.RemovedItems)
+            {
+                _selectedMemberIds.Remove(removed.Id);
+            }
+        }
+
+        private void ClearCollective_Click(object sender, RoutedEventArgs e)
+        {
+            cmbCollective.SelectedItem = null;
+            cmbCollective.Text = string.Empty;
+        }
+
+        private void TxtSearchMembers_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ApplyMembersFilter();
+        }
+
+        private void ClearSearchMembers_Click(object sender, RoutedEventArgs e)
+        {
+            txtSearchMembers.Text = string.Empty;
+        }
+
+        private void ApplyMembersFilter()
+        {
+            string query = txtSearchMembers.Text.Trim().ToLower();
+
+            var filtered = string.IsNullOrWhiteSpace(query)
+                ? _citizens
+                : _citizens.Where(c =>
+                    c.LastName.ToLower().Contains(query) ||
+                    c.FirstName.ToLower().Contains(query) ||
+                    (c.MiddleName != null && c.MiddleName.ToLower().Contains(query)) ||
+                    c.Position.ToLower().Contains(query)).ToList();
+
+            _isUpdatingSelection = true;
+            lstMembers.ItemsSource = filtered;
+
+            lstMembers.SelectedItems.Clear();
+            foreach (var item in filtered)
+            {
+                if (_selectedMemberIds.Contains(item.Id))
                 {
-                    var item = _citizens.FirstOrDefault(c => c.Id == member.Id);
-                    if (item != null)
-                    {
-                        lstMembers.SelectedItems.Add(item);
-                    }
+                    lstMembers.SelectedItems.Add(item);
                 }
             }
+            _isUpdatingSelection = false;
         }
 
         private void cmbType_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -112,14 +165,18 @@ namespace sara_coursework.Views
                 {
                     var citizen = _editingAwarded as Citizen ?? new Citizen();
 
-                    citizen.LastName = txtLastName.Text;
-                    citizen.FirstName = txtFirstName.Text;
-                    citizen.MiddleName = txtMiddleName.Text;
-                    citizen.Position = txtPosition.Text;
+                    citizen.LastName = txtLastName.Text.Trim();
+                    citizen.FirstName = txtFirstName.Text.Trim();
+                    citizen.MiddleName = txtMiddleName.Text.Trim();
+                    citizen.Position = txtPosition.Text.Trim();
 
                     if (cmbCollective.SelectedValue is int collectiveId)
                     {
                         citizen.CollectiveId = collectiveId;
+                    }
+                    else if (cmbCollective.SelectedItem is Collective col)
+                    {
+                        citizen.CollectiveId = col.Id;
                     }
                     else
                     {
@@ -143,11 +200,13 @@ namespace sara_coursework.Views
                 {
                     var collective = _editingAwarded as Collective ?? new Collective();
 
-                    collective.CollectiveName = txtCollectiveName.Text;
+                    collective.CollectiveName = txtCollectiveName.Text.Trim();
                     collective.Members.Clear();
-                    foreach (Citizen selected in lstMembers.SelectedItems)
+
+                    var selectedCitizens = _citizens.Where(c => _selectedMemberIds.Contains(c.Id)).ToList();
+                    foreach (var citizen in selectedCitizens)
                     {
-                        collective.Members.Add(selected);
+                        collective.Members.Add(citizen);
                     }
 
                     _awardedRepo.SaveAwarded(collective);

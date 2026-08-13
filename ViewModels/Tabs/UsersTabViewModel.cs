@@ -165,9 +165,11 @@ namespace sara_coursework.ViewModels.Tabs
             {
                 try
                 {
-                    _userRepo.DeleteUser(SelectedUser.Id);
+                    int idToDelete = SelectedUser.Id;
+                    string nameToDelete = SelectedUser.UserName;
+                    _userRepo.DeleteUser(idToDelete);
                     _logRepo?.LogAction("Info", "DeleteUser",
-                        $"Удален пользователь '{SelectedUser.UserName}' (ID: {SelectedUser.Id}).",
+                        $"Удален пользователь '{nameToDelete}' (ID: {idToDelete}).",
                         currentUser?.Username ?? "System");
                     LoadData();
                 }

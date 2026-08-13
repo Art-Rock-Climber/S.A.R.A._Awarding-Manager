@@ -196,6 +196,7 @@ namespace sara_coursework.ViewModels.Tabs
         {
             if (SelectedAward != null)
             {
+                int editedId = SelectedAward.Id;
                 var editAwardDialog = new SimpleEditWindow("Редактирование награды", "Название награды:", SelectedAward.AwardName);
                 if (editAwardDialog.ShowDialog() == true)
                 {
@@ -203,10 +204,10 @@ namespace sara_coursework.ViewModels.Tabs
                     {
                         SelectedAward.AwardName = editAwardDialog.ResultText;
                         _awardRepo.SaveAward(SelectedAward);
-                        LoadData();
                         _logRepo.LogAction("Info", "EditAward",
-                            $"Пользователь {_getCurrentUser()?.Username ?? "System"} изменил награду (ID: {SelectedAward.Id}).",
+                            $"Пользователь {_getCurrentUser()?.Username ?? "System"} изменил награду (ID: {editedId}).",
                             _getCurrentUser()?.Username ?? "System");
+                        LoadData();
                         _reloadLogs();
                         _reloadFilters();
                         _reloadAwardings();

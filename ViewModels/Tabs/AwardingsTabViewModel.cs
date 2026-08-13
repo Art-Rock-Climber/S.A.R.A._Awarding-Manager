@@ -355,13 +355,14 @@ namespace sara_coursework.ViewModels.Tabs
         {
             if (SelectedAwarding != null)
             {
-                var editWindow = new EditSingleAwardWindow(_assignmentRepo, _decreeRepo, _awardRepo, new AwardedRepository(), SelectedAwarding.Id);
+                int editedId = SelectedAwarding.Id;
+                var editWindow = new EditSingleAwardWindow(_assignmentRepo, _decreeRepo, _awardRepo, new AwardedRepository(), editedId);
                 if (editWindow.ShowDialog() == true)
                 {
-                    LoadData();
                     _logRepo.LogAction("Info", "EditAwarding",
-                        $"Пользователь {_getCurrentUser()?.Username ?? "System"} изменил награждение (ID: {SelectedAwarding.Id}).",
+                        $"Пользователь {_getCurrentUser()?.Username ?? "System"} изменил награждение (ID: {editedId}).",
                         _getCurrentUser()?.Username ?? "System");
+                    LoadData();
                     _reloadLogs();
                     _reloadAllRelated?.Invoke();
                 }

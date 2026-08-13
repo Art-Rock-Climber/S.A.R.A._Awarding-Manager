@@ -192,13 +192,14 @@ namespace sara_coursework.ViewModels.Tabs
         {
             if (SelectedDecree != null)
             {
-                var editDecreeWindow = new EditDecreeWindow(_decreeRepo, _reasonRepo, SelectedDecree.Id);
+                int editedId = SelectedDecree.Id;
+                var editDecreeWindow = new EditDecreeWindow(_decreeRepo, _reasonRepo, editedId);
                 if (editDecreeWindow.ShowDialog() == true)
                 {
-                    LoadData();
                     _logRepo.LogAction("Info", "EditDecree",
-                        $"Пользователь {_getCurrentUser()?.Username ?? "System"} изменил постановление (ID: {SelectedDecree.Id}).",
+                        $"Пользователь {_getCurrentUser()?.Username ?? "System"} изменил постановление (ID: {editedId}).",
                         _getCurrentUser()?.Username ?? "System");
+                    LoadData();
                     _reloadLogs();
                     _reloadAwardings();
                 }

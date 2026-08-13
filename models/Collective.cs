@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -10,7 +10,7 @@ namespace sara_coursework.models
     public class Collective : Awarded
     {
         [Required]
-        [MaxLength(200)]
+        [MaxLength(1000)]
         public string CollectiveName { get; set; } = null!;
 
         public override string DisplayName => this.CollectiveName;

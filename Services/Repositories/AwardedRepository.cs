@@ -11,7 +11,18 @@ namespace sara_coursework.Services.Repositories
         public List<Awarded> GetAwarded()
         {
             using var context = new AppDbContext();
-            return context.Awarded.AsNoTracking().ToList();
+            var list = context.Awarded.AsNoTracking().ToList();
+
+            var collectivesMap = list.OfType<Collective>().ToDictionary(c => c.Id);
+            foreach (var citizen in list.OfType<Citizen>())
+            {
+                if (citizen.CollectiveId.HasValue && collectivesMap.TryGetValue(citizen.CollectiveId.Value, out var coll))
+                {
+                    citizen.Collective = coll;
+                }
+            }
+
+            return list;
         }
 
         public void SaveAwarded(Awarded awarded)

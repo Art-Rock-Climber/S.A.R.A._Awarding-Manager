@@ -213,7 +213,9 @@
                         </DataGrid.InputBindings>
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Тип" Binding="{Binding AwardedType}" Width="100"/>
-                            <DataGridTextColumn Header="ФИО/Название" Binding="{Binding DisplayName}" Width="*"/>
+                            <DataGridTextColumn Header="ФИО/Название" Binding="{Binding DisplayName}" Width="2*"/>
+                            <DataGridTextColumn Header="Должность" Binding="{Binding Position}" Width="2*"/>
+                            <DataGridTextColumn Header="Коллектив" Binding="{Binding CollectiveName}" Width="1.5*"/>
                         </DataGrid.Columns>
                     </DataGrid>
                     <Grid Grid.Row="2" Margin="5">

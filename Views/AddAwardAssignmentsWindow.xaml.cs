@@ -8,6 +8,12 @@ using System.Windows.Controls;
 
 namespace sara_coursework.Views
 {
+    public class AwardedItemViewModel
+    {
+        public int Id { get; set; }
+        public string DisplayName { get; set; } = string.Empty;
+    }
+
     /// <summary>
     /// Interaction logic for AddAwardAssignmentsWindow.xaml
     /// </summary>
@@ -17,6 +23,10 @@ namespace sara_coursework.Views
         private readonly IAwardRepository _awardRepo;
         private readonly IDecreeRepository _decreeRepo;
         private readonly IAwardedRepository _awardedRepo;
+
+        private List<AwardedItemViewModel> _allAwardedItems = new();
+        private HashSet<int> _selectedAwardedIds = new();
+        private bool _isUpdatingSelection = false;
 
         public AddAwardAssignmentsWindow(
             IAwardAssignmentRepository assignmentRepo,
@@ -30,7 +40,11 @@ namespace sara_coursework.Views
             _decreeRepo = decreeRepo;
             _awardedRepo = awardedRepo;
             Title = "Добавление награждений";
-            InitializeMultiSelect();
+
+            lbAwarded.SelectionMode = SelectionMode.Multiple;
+            lbAwarded.DisplayMemberPath = "DisplayName";
+
+            InitializeData();
 
             cmbDecree.SelectionChanged += (s, e) => {
                 if (cmbDecree.SelectedItem != null) {
@@ -44,31 +58,18 @@ namespace sara_coursework.Views
                     cmbAward.ClearValue(BorderThicknessProperty);
                 }
             };
-            lbAwarded.SelectionChanged += (s, e) => {
-                if (lbAwarded.SelectedItems.Count > 0) {
-                    lbAwarded.ClearValue(BorderBrushProperty);
-                    lbAwarded.ClearValue(BorderThicknessProperty);
-                }
-            };
         }
 
-        private void InitializeMultiSelect()
+        private void InitializeData()
         {
-            lbAwarded.SelectionMode = SelectionMode.Multiple;
-            lbAwarded.DisplayMemberPath = "DisplayName";
-
-            // Load data through repositories
             var list = _awardedRepo.GetAwarded();
-            var items = new List<object>();
-            foreach (var a in list)
+            _allAwardedItems = list.Select(a => new AwardedItemViewModel
             {
-                items.Add(new
-                {
-                    a.Id,
-                    DisplayName = a is Citizen citizen ? citizen.ToString() : ((Collective)a).CollectiveName
-                });
-            }
-            lbAwarded.ItemsSource = items;
+                Id = a.Id,
+                DisplayName = a is Citizen citizen ? citizen.ToString() : ((Collective)a).CollectiveName
+            }).ToList();
+
+            ApplyAwardedFilter();
 
             cmbAward.ItemsSource = _awardRepo.GetAwards();
             cmbAward.DisplayMemberPath = "AwardName";
@@ -76,19 +77,78 @@ namespace sara_coursework.Views
             cmbDecree.DisplayMemberPath = "DisplayText";
         }
 
+        private void LbAwarded_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isUpdatingSelection) return;
+
+            foreach (AwardedItemViewModel added in e.AddedItems)
+            {
+                _selectedAwardedIds.Add(added.Id);
+            }
+            foreach (AwardedItemViewModel removed in e.RemovedItems)
+            {
+                _selectedAwardedIds.Remove(removed.Id);
+            }
+
+            UpdateSelectedCount();
+
+            if (_selectedAwardedIds.Count > 0)
+            {
+                lbAwarded.ClearValue(BorderBrushProperty);
+                lbAwarded.ClearValue(BorderThicknessProperty);
+            }
+        }
+
+        private void UpdateSelectedCount()
+        {
+            tbSelectedCount.Text = $"Выбрано: {_selectedAwardedIds.Count}";
+        }
+
+        private void TxtSearchAwarded_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ApplyAwardedFilter();
+        }
+
+        private void ClearSearchAwarded_Click(object sender, RoutedEventArgs e)
+        {
+            txtSearchAwarded.Text = string.Empty;
+        }
+
+        private void ApplyAwardedFilter()
+        {
+            string query = txtSearchAwarded.Text.Trim().ToLower();
+
+            var filtered = string.IsNullOrWhiteSpace(query)
+                ? _allAwardedItems
+                : _allAwardedItems.Where(i => i.DisplayName.ToLower().Contains(query)).ToList();
+
+            _isUpdatingSelection = true;
+            lbAwarded.ItemsSource = filtered;
+
+            lbAwarded.SelectedItems.Clear();
+            foreach (var item in filtered)
+            {
+                if (_selectedAwardedIds.Contains(item.Id))
+                {
+                    lbAwarded.SelectedItems.Add(item);
+                }
+            }
+            _isUpdatingSelection = false;
+        }
+
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             if (!ValidateInput()) return;
             try
             {
-                var decreeId = (int)cmbDecree.SelectedValue;
-                var awardId = (int)cmbAward.SelectedValue;
+                int decreeId = GetSelectedDecreeId();
+                int awardId = GetSelectedAwardId();
 
-                foreach (dynamic awarded in lbAwarded.SelectedItems)
+                foreach (int awardedId in _selectedAwardedIds)
                 {
                     var assignment = new AwardAssignment
                     {
-                        AwardedId = awarded.Id,
+                        AwardedId = awardedId,
                         AwardId = awardId,
                         DecreeId = decreeId
                     };
@@ -105,11 +165,25 @@ namespace sara_coursework.Views
             }
         }
 
+        private int GetSelectedDecreeId()
+        {
+            if (cmbDecree.SelectedValue is int id) return id;
+            if (cmbDecree.SelectedItem is Decree d) return d.Id;
+            throw new InvalidOperationException("Не выбрано постановление.");
+        }
+
+        private int GetSelectedAwardId()
+        {
+            if (cmbAward.SelectedValue is int id) return id;
+            if (cmbAward.SelectedItem is Award a) return a.Id;
+            throw new InvalidOperationException("Не выбрана награда.");
+        }
+
         private bool ValidateInput()
         {
             bool isValid = true;
 
-            if (cmbDecree.SelectedItem == null)
+            if (cmbDecree.SelectedItem == null && cmbDecree.SelectedValue == null)
             {
                 cmbDecree.BorderBrush = System.Windows.Media.Brushes.Red;
                 cmbDecree.BorderThickness = new Thickness(1.5);
@@ -121,7 +195,7 @@ namespace sara_coursework.Views
                 cmbDecree.ClearValue(BorderThicknessProperty);
             }
 
-            if (cmbAward.SelectedItem == null)
+            if (cmbAward.SelectedItem == null && cmbAward.SelectedValue == null)
             {
                 cmbAward.BorderBrush = System.Windows.Media.Brushes.Red;
                 cmbAward.BorderThickness = new Thickness(1.5);
@@ -133,7 +207,7 @@ namespace sara_coursework.Views
                 cmbAward.ClearValue(BorderThicknessProperty);
             }
 
-            if (lbAwarded.SelectedItems.Count == 0)
+            if (_selectedAwardedIds.Count == 0)
             {
                 lbAwarded.BorderBrush = System.Windows.Media.Brushes.Red;
                 lbAwarded.BorderThickness = new Thickness(1.5);
@@ -157,11 +231,6 @@ namespace sara_coursework.Views
         {
             DialogResult = false;
             Close();
-        }
-
-        private void LbAwarded_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            tbSelectedCount.Text = $"Выбрано: {lbAwarded.SelectedItems.Count}";
         }
 
         private void AddDecree_Click(object sender, RoutedEventArgs e)
@@ -206,26 +275,20 @@ namespace sara_coursework.Views
             if (dialog.ShowDialog() == true)
             {
                 var list = _awardedRepo.GetAwarded();
-                var items = new List<object>();
-                foreach (var a in list)
+                _allAwardedItems = list.Select(a => new AwardedItemViewModel
                 {
-                    items.Add(new
-                    {
-                        a.Id,
-                        DisplayName = a is Citizen citizen ? citizen.ToString() : ((Collective)a).CollectiveName
-                    });
-                }
-                lbAwarded.ItemsSource = items;
+                    Id = a.Id,
+                    DisplayName = a is Citizen citizen ? citizen.ToString() : ((Collective)a).CollectiveName
+                }).ToList();
 
                 if (list.Count > 0)
                 {
                     var newAwarded = list.OrderByDescending(a => a.Id).First();
-                    dynamic matchingItem = items.FirstOrDefault(i => ((dynamic)i).Id == newAwarded.Id);
-                    if (matchingItem != null)
-                    {
-                        lbAwarded.SelectedItems.Add(matchingItem);
-                    }
+                    _selectedAwardedIds.Add(newAwarded.Id);
                 }
+
+                ApplyAwardedFilter();
+                UpdateSelectedCount();
             }
         }
     }

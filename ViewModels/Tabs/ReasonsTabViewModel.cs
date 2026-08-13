@@ -192,6 +192,7 @@ namespace sara_coursework.ViewModels.Tabs
         {
             if (SelectedReason != null)
             {
+                int editedId = SelectedReason.Id;
                 var editReasonDialog = new SimpleEditWindow("Редактирование основания", "Название основания:", SelectedReason.ReasonName);
                 if (editReasonDialog.ShowDialog() == true)
                 {
@@ -199,10 +200,10 @@ namespace sara_coursework.ViewModels.Tabs
                     {
                         SelectedReason.ReasonName = editReasonDialog.ResultText;
                         _reasonRepo.SaveAwardReason(SelectedReason);
-                        LoadData();
                         _logRepo.LogAction("Info", "EditReason",
-                            $"Пользователь {_getCurrentUser()?.Username ?? "System"} изменил основание (ID: {SelectedReason.Id}).",
+                            $"Пользователь {_getCurrentUser()?.Username ?? "System"} изменил основание (ID: {editedId}).",
                             _getCurrentUser()?.Username ?? "System");
+                        LoadData();
                         _reloadLogs();
                         _reloadDecrees();
                     }

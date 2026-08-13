@@ -77,22 +77,7 @@ namespace sara_coursework
         {
             using (var context = new AppDbContext())
             {
-                if (!context.Users.Any())
-                {
-                    // Создаем администратора по умолчанию
-                    var (hash, salt) = PasswordHasher.CreateHash("admin123");
-
-                    context.Users.Add(new User
-                    {
-                        Username = "admin",
-                        PasswordHash = hash,
-                        Salt = salt,
-                        Role = UserRole.Admin,
-                        CreatedAt = DateTime.UtcNow
-                    });
-
-                    context.SaveChanges();
-                }
+                AppDbContext.InitializeDatabase(context);
 
                 // Выполняем миграцию двойного шифрования для старых данных
                 DoubleEncryptionMigrator.MigrateDoubleEncryption(context);

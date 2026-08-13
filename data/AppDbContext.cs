@@ -130,6 +130,33 @@ namespace sara_coursework.data
 
         public static void InitializeDatabase(AppDbContext context)
         {
+            try
+            {
+                context.Database.Migrate();
+            }
+            catch
+            {
+                // Fallback if migrations are already applied or managed separately
+            }
+
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"
+                    IF EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Awarded' AND COLUMN_NAME = 'Position')
+                        ALTER TABLE [Awarded] ALTER COLUMN [Position] nvarchar(1000) NULL;
+                    IF EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Awarded' AND COLUMN_NAME = 'CollectiveName')
+                        ALTER TABLE [Awarded] ALTER COLUMN [CollectiveName] nvarchar(1000) NULL;
+                    IF EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'AwardReasons' AND COLUMN_NAME = 'ReasonName')
+                        ALTER TABLE [AwardReasons] ALTER COLUMN [ReasonName] nvarchar(1000) NOT NULL;
+                    IF EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Awards' AND COLUMN_NAME = 'AwardName')
+                        ALTER TABLE [Awards] ALTER COLUMN [AwardName] nvarchar(1000) NOT NULL;
+                ");
+            }
+            catch
+            {
+                // Ignore if database/tables are being created for the first time
+            }
+
             if (!context.Users.Any())
             {
                 var (hash, salt) = PasswordHasher.CreateHash("admin123");

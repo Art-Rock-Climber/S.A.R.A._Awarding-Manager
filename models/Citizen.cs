@@ -22,7 +22,7 @@ namespace sara_coursework.models
         public string? MiddleName { get; set; }
 
         [Required]
-        [MaxLength(200)]
+        [MaxLength(1000)]
         public string Position { get; set; } = null!;
 
         public override string DisplayName => this.ToString();

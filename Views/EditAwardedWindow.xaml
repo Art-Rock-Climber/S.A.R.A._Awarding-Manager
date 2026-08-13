@@ -5,10 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:sara_coursework"
         mc:Ignorable="d"
-        Title="Редактирование награждаемого" Height="370" Width="400" WindowStartupLocation="CenterOwner">
+        Title="Редактирование награждаемого" Height="460" Width="420" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
     <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -16,7 +15,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <ComboBox x:Name="cmbType" Grid.Row="0" SelectedIndex="0" SelectionChanged="cmbType_SelectionChanged">
+        <ComboBox x:Name="cmbType" Grid.Row="0" SelectedIndex="0" SelectionChanged="cmbType_SelectionChanged" Margin="0,0,0,10">
             <ComboBoxItem>Гражданин</ComboBoxItem>
             <ComboBoxItem>Коллектив</ComboBoxItem>
         </ComboBox>
@@ -35,10 +34,22 @@
             <Label Content="Должность*"/>
             <TextBox x:Name="txtPosition" Margin="0,0,0,5"/>
 
-            <Label Content="Коллектив"/>
-            <ComboBox x:Name="cmbCollective" Margin="0,0,0,5" 
-                      DisplayMemberPath="CollectiveName"
-                      SelectedValuePath="Id"/>
+            <Label Content="Коллектив / Организация"/>
+            <Grid Margin="0,0,0,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ComboBox x:Name="cmbCollective" Grid.Column="0"
+                          IsEditable="True" IsTextSearchEnabled="True"
+                          DisplayMemberPath="CollectiveName"
+                          SelectedValuePath="Id"/>
+                <Button x:Name="btnClearCollective" Grid.Column="1" 
+                        Content="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="11"
+                        Width="28" Margin="5,0,0,0"
+                        Click="ClearCollective_Click"
+                        ToolTip="Снять коллектив (без организации / уволен)"/>
+            </Grid>
         </StackPanel>
 
         <!-- Для коллектива -->
@@ -46,16 +57,31 @@
             <Label Content="Название коллектива*"/>
             <TextBox x:Name="txtCollectiveName" Margin="0,0,0,5"/>
 
-            <Label Content="Участники"/>
+            <Label Content="Поиск участников"/>
+            <Grid Margin="0,0,0,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="txtSearchMembers" Grid.Column="0" 
+                         TextChanged="TxtSearchMembers_TextChanged" VerticalContentAlignment="Center"/>
+                <Button x:Name="btnClearSearchMembers" Grid.Column="1"
+                        Content="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="11"
+                        Width="28" Margin="5,0,0,0"
+                        Click="ClearSearchMembers_Click" ToolTip="Очистить поиск"/>
+            </Grid>
+
+            <Label Content="Участники коллектива"/>
             <ListBox x:Name="lstMembers" Margin="0,0,0,5" 
                      SelectionMode="Multiple"
                      DisplayMemberPath="DisplayName"
-                     Height="100"/>
+                     Height="140"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Сохранить" Click="SaveButton_Click" IsDefault="True"/>
-            <Button Content="Отмена" Click="CancelButton_Click" IsCancel="True"/>
+        <!-- Кнопки -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Сохранить" Click="SaveButton_Click" IsDefault="True" Width="90" Margin="0,0,5,0"/>
+            <Button Content="Отмена" Click="CancelButton_Click" IsCancel="True" Width="90"/>
         </StackPanel>
     </Grid>
 </Window>
